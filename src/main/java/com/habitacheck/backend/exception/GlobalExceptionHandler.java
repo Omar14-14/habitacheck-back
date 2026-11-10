@@ -9,6 +9,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -33,6 +34,7 @@ public class GlobalExceptionHandler {
         });
         ProblemDetail problema = ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST, "Revisa los datos del registro");
+        problema.setDetail("Revisa los datos de la solicitud");
         problema.setProperty("errores", errores);
         return problema;
     }
@@ -40,13 +42,23 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ProblemDetail jsonInvalido() {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
-                "El JSON es inválido. El rol debe ser arrendatario o arrendador");
+                "El JSON es inválido o contiene valores no permitidos");
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ProblemDetail validacionServicio() {
         return ProblemDetail.forStatusAndDetail(
-                HttpStatus.BAD_REQUEST, "Revisa los datos del registro");
+                HttpStatus.BAD_REQUEST, "Revisa los datos de la solicitud");
+    }
+
+    @ExceptionHandler(PublicacionInvalidaException.class)
+    public ProblemDetail publicacionInvalida(PublicacionInvalidaException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ProblemDetail accesoDenegado(AccessDeniedException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, exception.getMessage());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

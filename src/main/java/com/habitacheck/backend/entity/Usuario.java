@@ -55,4 +55,18 @@ public class Usuario {
         this.estado = "activo";
         this.fechaRegistro = fechaRegistro;
     }
+
+    public void actualizarNombre(String nombre) {
+        if (nombre != null && !nombre.isBlank()) {
+            this.nombre = nombre.strip();
+        }
+    }
+
+    public void actualizarTelefono(String telefono) {
+        this.telefono = (telefono == null || telefono.isBlank()) ? null : telefono.strip();
+    }
+
+    public void actualizarFotoPerfil(String fotoPerfil) {
+        this.fotoPerfil = fotoPerfil;
+    }
 }

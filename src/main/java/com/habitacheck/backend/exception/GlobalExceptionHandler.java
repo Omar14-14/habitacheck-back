@@ -12,6 +12,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -21,6 +22,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CorreoYaRegistradoException.class)
     public ProblemDetail correoDuplicado(CorreoYaRegistradoException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    @ExceptionHandler(UsuarioNoEncontradoException.class)
+    public ProblemDetail usuarioNoEncontrado(UsuarioNoEncontradoException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ProblemDetail fotoDemasiadoGrande() {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.PAYLOAD_TOO_LARGE,
+                "La imagen no puede superar 5 MB");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -51,8 +63,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail integridad(DataIntegrityViolationException exception) {
-        // Solo el índice del correo equivale a un conflicto de registro.
-        // Otras violaciones de integridad no deben reportarse como correo duplicado.
         for (Throwable causa = exception; causa != null; causa = causa.getCause()) {
             if (causa instanceof org.hibernate.exception.ConstraintViolationException constraint
                     && "ux_usuarios_correo_lower".equals(constraint.getConstraintName())) {

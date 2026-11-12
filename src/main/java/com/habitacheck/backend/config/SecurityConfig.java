@@ -16,17 +16,27 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        var registro = PathPatternRequestMatcher.withDefaults()
-                .matcher(HttpMethod.POST, "/api/auth/registro");
+        var matcher = PathPatternRequestMatcher.withDefaults();
+
+        // HU-registro: crear cuenta
+        var registro = matcher.matcher(HttpMethod.POST, "/api/auth/registro");
+
+        // HU-foto-perfil: perfil completo (temporal hasta JWT)
+        var perfilGet    = matcher.matcher(HttpMethod.GET,    "/api/perfil");
+        var perfilPatch  = matcher.matcher(HttpMethod.PATCH,  "/api/perfil");
+        var perfilFotoPut = matcher.matcher(HttpMethod.PUT,   "/api/perfil/foto");
+        var perfilFotoDel = matcher.matcher(HttpMethod.DELETE, "/api/perfil/foto");
 
         return http
-                // Este endpoint crea una cuenta sin usar autenticación por cookies.
-                // Se conserva CSRF para las demás rutas.
-                .csrf(csrf -> csrf.ignoringRequestMatchers(registro))
+                .csrf(csrf -> csrf.ignoringRequestMatchers(
+                        registro, perfilGet, perfilPatch, perfilFotoPut, perfilFotoDel))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(registro).permitAll()
+                        // TODO: reemplazar por autenticación JWT cuando esté lista
+                        .requestMatchers(perfilGet, perfilPatch, perfilFotoPut, perfilFotoDel)
+                        .permitAll()
                         .anyRequest().authenticated())
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
